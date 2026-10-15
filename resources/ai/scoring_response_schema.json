@@ -1,0 +1,38 @@
+{
+  "type": "OBJECT",
+  "properties": {
+    "risk_score": { "type": "INTEGER", "description": "Likelihood of return-to-sender, 0 to 100" },
+    "risk_tier": { "type": "STRING", "enum": ["LOW", "MEDIUM", "HIGH"] },
+    "reasons": {
+      "type": "ARRAY",
+      "description": "2 to 5 short plain-English reasons, most important first",
+      "items": { "type": "STRING" }
+    },
+    "buyer_intent": { "type": "STRING", "enum": ["COMMITTED", "HESITANT", "PRICE_SHOPPING", "UNVERIFIED"] },
+    "key_moments": {
+      "type": "ARRAY",
+      "description": "Up to 3 exact chat lines that drove the judgment",
+      "items": { "type": "STRING" }
+    },
+    "parsed_address": {
+      "type": "OBJECT",
+      "properties": {
+        "house": { "type": "STRING" },
+        "street": { "type": "STRING" },
+        "barangay": { "type": "STRING" },
+        "city": { "type": "STRING" },
+        "province": { "type": "STRING" },
+        "zip": { "type": "STRING" },
+        "landmark": { "type": "STRING" },
+        "missing_fields": { "type": "ARRAY", "items": { "type": "STRING" } }
+      },
+      "required": ["house", "street", "barangay", "city", "province", "zip", "landmark", "missing_fields"],
+      "propertyOrdering": ["house", "street", "barangay", "city", "province", "zip", "landmark", "missing_fields"]
+    },
+    "recommended_action": { "type": "STRING", "enum": ["SHIP_NOW", "CONFIRM_FIRST", "HOLD"] },
+    "confirmation_message": { "type": "STRING" },
+    "confidence": { "type": "STRING", "enum": ["HIGH", "LOW"] }
+  },
+  "required": ["risk_score", "risk_tier", "reasons", "buyer_intent", "key_moments", "parsed_address", "recommended_action", "confirmation_message", "confidence"],
+  "propertyOrdering": ["buyer_intent", "key_moments", "parsed_address", "reasons", "risk_score", "risk_tier", "recommended_action", "confidence", "confirmation_message"]
+}
