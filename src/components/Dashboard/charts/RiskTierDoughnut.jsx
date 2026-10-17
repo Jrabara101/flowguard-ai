@@ -13,12 +13,13 @@ ChartJS.register(
   Legend
 );
 
-export const RiskTierDoughnut = () => {
+export const RiskTierDoughnut = ({ counts = { LOW: 0, MEDIUM: 0, HIGH: 0 }, label = 'Orders Scored' }) => {
+  const total = counts.LOW + counts.MEDIUM + counts.HIGH;
   const data = {
     labels: ['Low Risk (Ship Now)', 'Medium Risk (Confirm First)', 'High Risk (Hold)'],
     datasets: [
       {
-        data: [68, 21, 11],
+        data: [counts.LOW, counts.MEDIUM, counts.HIGH],
         backgroundColor: [
           '#10B981', // green
           '#F59E0B', // amber
@@ -54,7 +55,7 @@ export const RiskTierDoughnut = () => {
         borderWidth: 1,
         padding: 10,
         callbacks: {
-          label: (context) => ` ${context.label}: ${context.parsed}% of orders`
+          label: (context) => ` ${context.label}: ${context.parsed} orders (${total ? Math.round(context.parsed / total * 100) : 0}%)`
         }
       }
     },
@@ -65,8 +66,8 @@ export const RiskTierDoughnut = () => {
     <div className="h-64 w-full relative flex items-center justify-center">
       <Doughnut data={data} options={options} />
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6">
-        <span className="text-2xl font-heading font-extrabold text-white">1,250</span>
-        <span className="text-[10px] text-charcoal-400 font-medium">Orders Scored</span>
+        <span className="text-2xl font-heading font-extrabold text-white">{total.toLocaleString()}</span>
+        <span className="text-[10px] text-charcoal-400 font-medium">{label}</span>
       </div>
     </div>
   );

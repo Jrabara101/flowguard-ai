@@ -33,6 +33,42 @@ class OrderController extends Controller
         return response()->json(['count' => $orders->count(), 'orders' => $orders->map(OrderPresenter::summary(...))->values()]);
     }
 
+    /**
+     * The Action Queue screen: orders that still matter (not yet delivered or returned) and already have an
+     * AI assessment, in full detail so the screen needs one request, not one per order.
+     */
+    public function queue(): JsonResponse
+    {
+        $orders = Order::query()
+            ->whereHas('latestAssessment')
+            ->whereNotIn('status', ['DELIVERED', 'RTS'])
+            ->with(['customer', 'items', 'conversation', 'latestAssessment', 'decisions', 'outcome'])
+            ->orderByDesc('placed_at')
+            ->limit(40)
+            ->get();
+
+        return response()->json(['count' => $orders->count(), 'orders' => $orders->map(OrderPresenter::detail(...))->values()]);
+    }
+
+    /** Demo button: Gemini scores the next incoming order that has not been scored yet. */
+    public function simulate(OrderScorer $scorer): JsonResponse
+    {
+        $order = Order::query()->where('status', 'PENDING')->whereDoesntHave('riskAssessments')->orderBy('placed_at')->first();
+        if (! $order) {
+            return response()->json(['message' => 'No more incoming orders to score.'], 422);
+        }
+
+        try {
+            $scorer->scoreAndSave($order);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Scoring is unavailable right now. Please try again.'], 502);
+        }
+
+        return response()->json(OrderPresenter::detail($order->refresh()));
+    }
+
     public function show(Order $order): JsonResponse
     {
         return response()->json(OrderPresenter::detail($order));

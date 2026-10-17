@@ -32,13 +32,6 @@ export const OverrideModal = () => {
       desc: 'Keep on hold due to severe RTS probability or unverified buyer.',
       icon: AlertOctagon,
       color: 'text-risk-red border-risk-red/40'
-    },
-    {
-      id: 'CANCEL',
-      title: 'Cancel Order',
-      desc: 'Cancel the order in store/channel and notify buyer.',
-      icon: XCircle,
-      color: 'text-charcoal-400 border-charcoal-600'
     }
   ];
 

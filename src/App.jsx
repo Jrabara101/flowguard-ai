@@ -42,6 +42,17 @@ const ToastNotification = () => {
   );
 };
 
+const LoadBanner = () => {
+  const { loadError, reloadQueue } = useOrders();
+  if (!loadError) return null;
+  return (
+    <div className="px-4 py-2 text-xs bg-risk-red/20 text-risk-red border-b border-risk-red/40 flex items-center justify-between">
+      <span>Could not load orders from the server: {loadError}</span>
+      <button onClick={reloadQueue} className="underline font-semibold">Retry</button>
+    </div>
+  );
+};
+
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState('queue');
 
@@ -53,6 +64,7 @@ const MainLayout = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Topbar activeTab={activeTab} />
+        <LoadBanner />
 
         <main className="flex-1 flex overflow-hidden">
           {activeTab === 'queue' && <ActionQueueView />}

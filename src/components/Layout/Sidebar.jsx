@@ -158,14 +158,14 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
               <Cpu className="w-3 h-3 text-gold-400" />
               <span>Scoring Engine:</span>
             </span>
-            <span className="font-semibold text-white">Gemini 1.5 Flash</span>
+            <span className="font-semibold text-white">Gemini Flash</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-charcoal-300">
               <Sparkles className="w-3 h-3 text-indigo-400" />
               <span>Ops Copilot:</span>
             </span>
-            <span className="font-semibold text-white">Gemini 1.5 Pro</span>
+            <span className="font-semibold text-white">Gemini Pro</span>
           </div>
         </div>
 

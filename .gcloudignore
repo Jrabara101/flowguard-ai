@@ -1,0 +1,13 @@
+# Files never uploaded to Cloud Build (secrets and things the Dockerfile rebuilds)
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+node_modules/
+vendor/
+dist/
+public/build/
+storage/logs/
+database/*.sqlite
+*.log
