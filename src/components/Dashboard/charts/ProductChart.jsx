@@ -9,6 +9,7 @@ import {
   Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { C, tooltip, legendLabels } from './theme';
 
 ChartJS.register(
   CategoryScale,
@@ -27,8 +28,8 @@ export const ProductChart = ({ products = [] }) => {
       {
         label: 'RTS Rate (%)',
         data: products.map(p => p.rts_rate),
-        backgroundColor: '#D4AF37',
-        borderColor: '#F5C542',
+        backgroundColor: C.primary,
+        borderColor: C.primary,
         borderWidth: 1,
         borderRadius: 6
       }
@@ -43,12 +44,7 @@ export const ProductChart = ({ products = [] }) => {
         display: false
       },
       tooltip: {
-        backgroundColor: '#1C1F28',
-        titleColor: '#FFFFFF',
-        bodyColor: '#D4AF37',
-        borderColor: '#2A303F',
-        borderWidth: 1,
-        padding: 10,
+        ...tooltip,
         callbacks: {
           title: (items) => products[items[0].dataIndex].product_name,
           label: (context) => `RTS Rate: ${context.parsed.y}% (${products[context.dataIndex].rts_orders} failed out of ${products[context.dataIndex].total_orders})`
@@ -61,7 +57,7 @@ export const ProductChart = ({ products = [] }) => {
           display: false
         },
         ticks: {
-          color: '#8E98B0',
+          color: C.tick,
           font: {
             size: 10
           }
@@ -69,10 +65,10 @@ export const ProductChart = ({ products = [] }) => {
       },
       y: {
         grid: {
-          color: '#242832'
+          color: C.grid
         },
         ticks: {
-          color: '#8E98B0',
+          color: C.tick,
           callback: (val) => `${val}%`
         },
         beginAtZero: true

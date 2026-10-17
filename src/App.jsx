@@ -5,37 +5,31 @@ import { Topbar } from './components/Layout/Topbar';
 import { ActionQueueView } from './components/ActionQueue/ActionQueueView';
 import { CopilotView } from './components/Copilot/CopilotView';
 import { DashboardView } from './components/Dashboard/DashboardView';
-import { ChatDrawer } from './components/ActionQueue/ChatDrawer';
+import { OrderDrawer } from './components/ActionQueue/OrderDrawer';
 import { OverrideModal } from './components/ActionQueue/OverrideModal';
 import { SimulateOrderModal } from './components/ActionQueue/SimulateOrderModal';
 import { CheckCircle2, AlertTriangle, Info, Sparkles } from 'lucide-react';
+
+const TOAST_STYLE = {
+  success: { icon: CheckCircle2, color: 'text-low-text', bar: 'bg-low' },
+  warning: { icon: AlertTriangle, color: 'text-medium-text', bar: 'bg-medium' },
+  ai: { icon: Sparkles, color: 'text-primary', bar: 'bg-primary' },
+  info: { icon: Info, color: 'text-body', bar: 'bg-line' },
+};
 
 const ToastNotification = () => {
   const { toastMessage } = useOrders();
   if (!toastMessage) return null;
 
   const { message, type } = toastMessage;
+  const style = TOAST_STYLE[type] || TOAST_STYLE.info;
+  const Icon = style.icon;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-300">
-      <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold ${
-        type === 'success' 
-          ? 'bg-charcoal-850 border-risk-green/50 text-risk-green' 
-          : type === 'warning'
-          ? 'bg-charcoal-850 border-risk-amber/50 text-risk-amber'
-          : type === 'gold'
-          ? 'bg-charcoal-850 border-gold-500/50 text-gold-300 shadow-gold-glow'
-          : 'bg-charcoal-850 border-charcoal-700 text-white'
-      }`}>
-        {type === 'success' ? (
-          <CheckCircle2 className="w-4 h-4 text-risk-green shrink-0" />
-        ) : type === 'warning' ? (
-          <AlertTriangle className="w-4 h-4 text-risk-amber shrink-0" />
-        ) : type === 'gold' ? (
-          <Sparkles className="w-4 h-4 text-gold-400 shrink-0" />
-        ) : (
-          <Info className="w-4 h-4 text-charcoal-300 shrink-0" />
-        )}
+    <div role="status" className="fixed top-5 right-5 z-toast w-[min(360px,calc(100vw-40px))] bg-white rounded-md shadow-pop overflow-hidden animate-pop">
+      <div className={`h-1 ${style.bar}`} />
+      <div className="flex items-start gap-3 px-4 py-3 text-sm text-ink">
+        <Icon className={`w-5 h-5 shrink-0 ${style.color}`} />
         <span>{message}</span>
       </div>
     </div>
@@ -46,35 +40,33 @@ const LoadBanner = () => {
   const { loadError, reloadQueue } = useOrders();
   if (!loadError) return null;
   return (
-    <div className="px-4 py-2 text-xs bg-risk-red/20 text-risk-red border-b border-risk-red/40 flex items-center justify-between">
+    <div role="alert" className="mx-4 sm:mx-6 mt-4 px-4 py-3 rounded-md text-sm bg-high-soft text-high-text flex items-center justify-between gap-3">
       <span>Could not load orders from the server: {loadError}</span>
-      <button onClick={reloadQueue} className="underline font-semibold">Retry</button>
+      <button onClick={reloadQueue} className="font-semibold underline">Retry</button>
     </div>
   );
 };
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState('queue');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-charcoal-950 text-charcoal-100 font-sans overflow-hidden">
-      {/* Persistent Brand Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="flex h-screen bg-canvas text-body font-sans overflow-hidden">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar activeTab={activeTab} />
+      <div className="flex-1 min-w-0 overflow-y-auto">
+        <Topbar activeTab={activeTab} onMenu={() => setMenuOpen(true)} />
         <LoadBanner />
 
-        <main className="flex-1 flex overflow-hidden">
+        <main className="px-4 sm:px-6 py-6">
           {activeTab === 'queue' && <ActionQueueView />}
           {activeTab === 'copilot' && <CopilotView />}
           {activeTab === 'dashboard' && <DashboardView />}
         </main>
       </div>
 
-      {/* Global Modals & Drawers */}
-      <ChatDrawer />
+      <OrderDrawer />
       <OverrideModal />
       <SimulateOrderModal />
       <ToastNotification />

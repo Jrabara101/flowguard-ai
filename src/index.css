@@ -4,59 +4,64 @@
 
 @layer base {
   * {
-    border-color: #232733;
+    border-color: #DFE3E7;
   }
-  
+
   body {
-    background-color: #0B0C0E;
-    color: #F3F5F9;
+    background-color: #F2F2F6;
+    color: #475F7B;
+  }
+
+  :focus-visible {
+    outline: 2px solid #5A8DEE;
+    outline-offset: 2px;
   }
 }
 
-/* Custom sleek dark scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #121316;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A303F;
+  background: #C9D1DA;
   border-radius: 9999px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #3D4558;
+/* Moving stripe on the banner while Gemini scores an order */
+@keyframes stripe {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* Shimmer animation for scoring state */
-@keyframes goldShimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(212,175,55,0.05) 0%, rgba(212,175,55,0.2) 50%, rgba(212,175,55,0.05) 100%);
+.animate-stripe {
+  background: linear-gradient(90deg, #E5EDFC 0%, #F4F8FF 50%, #E5EDFC 100%);
   background-size: 200% 100%;
-  animation: goldShimmer 2s infinite;
+  animation: stripe 2s linear infinite;
 }
 
-/* Glass panel effect */
-.glass-panel {
-  background: rgba(22, 24, 31, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+/* Barcode on the waybill slip, drawn with stripes so it needs no image */
+.barcode {
+  background: repeating-linear-gradient(90deg, #304156 0 2px, transparent 2px 4px, #304156 4px 7px, transparent 7px 9px, #304156 9px 10px, transparent 10px 13px);
 }
 
-.glass-panel-gold {
-  background: rgba(22, 24, 31, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+@keyframes drawer-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-drawer { animation: drawer-in 220ms ease-out; }
+.animate-pop { animation: pop-in 180ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stripe, .animate-drawer, .animate-pop, .animate-spin, .animate-pulse { animation: none; }
 }

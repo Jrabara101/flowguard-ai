@@ -11,6 +11,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { C, tooltip, legendLabels } from './theme';
 
 ChartJS.register(
   CategoryScale,
@@ -32,11 +33,11 @@ export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
     {
       label: 'Actual RTS rate (all orders shipped)',
       data: weekly.map(w => w.rts_rate),
-      borderColor: '#EF4444',
-      backgroundColor: 'rgba(239, 68, 68, 0.12)',
+      borderColor: C.high,
+      backgroundColor: 'rgba(255, 91, 92, 0.10)',
       borderWidth: 3,
       pointRadius: 4,
-      pointBackgroundColor: '#EF4444',
+      pointBackgroundColor: C.high,
       fill: true,
       tension: 0.3
     }
@@ -45,7 +46,7 @@ export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
     datasets.push({
       label: 'Backtest: orders FlowGuard would ship',
       data: weekly.map(() => shippedRate),
-      borderColor: '#10B981',
+      borderColor: C.low,
       backgroundColor: 'transparent',
       borderDash: [6, 4],
       borderWidth: 2,
@@ -62,22 +63,10 @@ export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          color: '#CBD2E1',
-          font: {
-            size: 11
-          },
-          usePointStyle: true,
-          boxWidth: 8
-        }
+        labels: legendLabels
       },
       tooltip: {
-        backgroundColor: '#1C1F28',
-        titleColor: '#FFFFFF',
-        bodyColor: '#D4AF37',
-        borderColor: '#2A303F',
-        borderWidth: 1,
-        padding: 10,
+        ...tooltip,
         callbacks: {
           label: (context) => `${context.dataset.label}: ${context.parsed.y}%`
         }
@@ -86,10 +75,10 @@ export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
     scales: {
       x: {
         grid: {
-          color: '#242832'
+          color: C.grid
         },
         ticks: {
-          color: '#8E98B0',
+          color: C.tick,
           font: {
             size: 10
           }
@@ -97,10 +86,10 @@ export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
       },
       y: {
         grid: {
-          color: '#242832'
+          color: C.grid
         },
         ticks: {
-          color: '#8E98B0',
+          color: C.tick,
           callback: (val) => `${val}%`
         },
         beginAtZero: true

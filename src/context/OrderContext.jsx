@@ -11,7 +11,7 @@ export const OrderProvider = ({ children }) => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationStep, setSimulationStep] = useState('');
   const [simulationModalOpen, setSimulationModalOpen] = useState(false);
-  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [overrideModalOpen, setOverrideModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -103,6 +103,22 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
+  // Apply one decision to several orders. A null action accepts each order's own AI recommendation.
+  const bulkDecide = async (orderIds, action = null) => {
+    const results = await Promise.allSettled(orderIds.map((id) => api.decide(id, action)));
+    const done = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+    done.forEach(replaceOrder);
+    const failed = results.length - done.length;
+    if (failed) showToast(`${done.length} of ${results.length} orders saved. ${failed} failed, try again.`, 'warning');
+    else showToast(`${done.length} orders ${action ? `set to ${action}` : 'accepted'}`, 'success');
+    return done.length;
+  };
+
+  const openOrder = (orderId) => {
+    setSelectedOrderId(orderId);
+    setDetailOpen(true);
+  };
+
   // Override AI Recommendation
   const overrideOrder = async (orderId, newAction, note = '') => {
     try {
@@ -133,8 +149,9 @@ export const OrderProvider = ({ children }) => {
       const order = await api.simulate();
       setOrders(prev => [order, ...prev.filter(o => o.id !== order.id)]);
       setSelectedOrderId(order.id);
+      setDetailOpen(true);
       const a = order.risk_assessment;
-      showToast(`Order #${order.id} scored by Gemini Flash: ${a.risk_tier} RISK (${a.risk_score}/100)`, 'gold');
+      showToast(`Order #${order.id} scored by Gemini Flash: ${a.risk_tier} risk (${a.risk_score}/100)`, 'ai');
     } catch (e) {
       showToast(e.message, 'warning');
     } finally {
@@ -159,8 +176,10 @@ export const OrderProvider = ({ children }) => {
         simulationStep,
         simulationModalOpen,
         setSimulationModalOpen,
-        chatDrawerOpen,
-        setChatDrawerOpen,
+        detailOpen,
+        setDetailOpen,
+        openOrder,
+        bulkDecide,
         overrideModalOpen,
         setOverrideModalOpen,
         activeRiskFilter,
