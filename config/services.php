@@ -47,6 +47,12 @@ return [
         'pro_fallback_model' => env('GEMINI_PRO_FALLBACK_MODEL', 'gemini-2.5-pro'),
     ],
 
+    'firebase' => [
+        'project' => env('FIREBASE_PROJECT', env('GOOGLE_CLOUD_PROJECT')),
+        // Writes the live activity feed to Firestore. Off unless set, so tests and local runs never write to it.
+        'activity_feed' => (bool) env('FIRESTORE_ACTIVITY_FEED', false),
+    ],
+
     'demo' => [
         'admin_email' => env('DEMO_ADMIN_EMAIL', 'admin@flowguard.test'),
         'admin_password' => env('DEMO_ADMIN_PASSWORD', 'password'),

@@ -6,6 +6,7 @@ import { ProvinceChart } from './charts/ProvinceChart';
 import { RtsTrendChart } from './charts/RtsTrendChart';
 import { ProductChart } from './charts/ProductChart';
 import { RiskTierDoughnut } from './charts/RiskTierDoughnut';
+import { LiveActivity } from '../LiveActivity';
 
 const Kpi = ({ icon: Icon, tone, label, value, line, note }) => (
   <div className="bg-white rounded-md shadow-card p-5">
@@ -105,6 +106,8 @@ export const DashboardView = () => {
           <span>No backtest yet. Run <code className="font-mono">php artisan flowguard:backtest --sample=150</code> to score past orders with Gemini.</span>
         </div>
       )}
+
+      <LiveActivity />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Weekly RTS rate" subtitle="Actual returns per week. The dashed line is the backtest result.">

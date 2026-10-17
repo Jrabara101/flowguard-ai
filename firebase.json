@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "public": "firebase-public",
+    "rewrites": [
+      {
+        "source": "**",
+        "run": { "serviceId": "flowguard", "region": "asia-southeast1" }
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

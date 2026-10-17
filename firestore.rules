@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Browsers may read the live activity feed (order facts only, no personal data) and nothing else.
+// Only the backend writes, through its service account, which security rules do not apply to.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /activity/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
