@@ -51,7 +51,14 @@ class CopilotService
             }
 
             // Send the model's turn back exactly as received (Gemini 3 needs its thought signatures), then the results.
-            $contents[] = ['role' => 'model', 'parts' => $parts];
+            // PHP decodes "args": {} to [], which would re-encode as a list that Gemini rejects, so keep it an object.
+            $contents[] = ['role' => 'model', 'parts' => array_map(function ($p) {
+                if (isset($p['functionCall']) && empty($p['functionCall']['args'])) {
+                    $p['functionCall']['args'] = new \stdClass;
+                }
+
+                return $p;
+            }, $parts)];
             $replies = [];
             foreach ($calls as $part) {
                 $name = $part['functionCall']['name'];

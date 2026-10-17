@@ -21,6 +21,7 @@ class OrderPresenter
             'recommended_action' => $a->recommended_action,
             'confirmation_message' => $a->confirmation_message,
             'confidence' => $a->confidence,
+            'signals' => $a->signals,
             'model' => $a->model,
             'scored_at' => $a->created_at?->toIso8601String(),
         ] : null;

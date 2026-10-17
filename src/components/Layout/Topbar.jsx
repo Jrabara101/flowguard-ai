@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Search, 
   Sparkles, 
@@ -11,6 +11,7 @@ import {
   Bell
 } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
+import { api } from '../../api';
 
 export const Topbar = ({ activeTab }) => {
   const { 
@@ -20,6 +21,13 @@ export const Topbar = ({ activeTab }) => {
     searchQuery, 
     setSearchQuery 
   } = useOrders();
+
+  // Headline numbers come from the backtest, the same source as the dashboard.
+  const [headline, setHeadline] = useState(null);
+  useEffect(() => {
+    api.dashboard().then((d) => setHeadline(d)).catch(() => setHeadline(null));
+  }, []);
+  const held = headline?.backtest?.if_high_orders_were_held;
 
   const getTabTitle = () => {
     switch (activeTab) {
@@ -77,18 +85,22 @@ export const Topbar = ({ activeTab }) => {
 
           {/* Quick Metrics Badges */}
           <div className="hidden lg:flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs">
-              <TrendingDown className="w-3.5 h-3.5 text-risk-green" />
-              <span className="text-charcoal-400">RTS Rate:</span>
-              <span className="font-bold text-risk-green">9.2%</span>
-              <span className="text-[10px] text-charcoal-500 line-through">15.8%</span>
-            </div>
+            {held && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs" title="Backtest on synthetic past orders">
+                <TrendingDown className="w-3.5 h-3.5 text-risk-green" />
+                <span className="text-charcoal-400">Backtest RTS:</span>
+                <span className="text-[10px] text-charcoal-500 line-through">{headline.backtest.overall_rts_rate}%</span>
+                <span className="font-bold text-risk-green">{held.rts_rate_of_orders_shipped}%</span>
+              </div>
+            )}
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs">
-              <span className="text-gold-400 font-bold">₱</span>
-              <span className="text-charcoal-400">Saved:</span>
-              <span className="font-bold text-gold-300">₱184.5K</span>
-            </div>
+            {held && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs" title="Share of all returns that Gemini placed in the HIGH tier">
+                <ShieldAlert className="w-3.5 h-3.5 text-gold-400" />
+                <span className="text-charcoal-400">Returns caught:</span>
+                <span className="font-bold text-gold-300">{held.share_of_all_rts_caught_pct}%</span>
+              </div>
+            )}
           </div>
 
           {/* Simulate Order Button */}
@@ -121,10 +133,10 @@ export const Topbar = ({ activeTab }) => {
         <div className="bg-charcoal-850 border-t border-gold-500/30 px-6 py-2 flex items-center justify-between animate-shimmer text-xs">
           <div className="flex items-center gap-2 text-gold-300">
             <Sparkles className="w-4 h-4 text-gold-400 animate-spin" />
-            <span className="font-semibold text-white">Gemini 1.5 Flash Pipeline:</span>
+            <span className="font-semibold text-white">Gemini Flash Pipeline:</span>
             <span>{simulationStep}</span>
           </div>
-          <span className="text-[11px] font-mono text-gold-400/80">LATENCY ~1.2s · ZERO-SHOT JAPAC MODEL</span>
+          <span className="text-[11px] font-mono text-gold-400/80">USUALLY 7–10 S · VERTEX AI GEMINI FLASH</span>
         </div>
       )}
     </header>
