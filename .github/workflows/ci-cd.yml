@@ -1,0 +1,106 @@
+# FlowGuard CI/CD
+#  - Every pull request and push: backend tests + frontend build (no cloud access needed).
+#  - Push to main only: build the image, deploy it to Cloud Run with NO traffic, smoke test that
+#    preview URL, and only then move live traffic to it. A failed smoke test leaves the live site as it was.
+# Google Cloud login is keyless (Workload Identity Federation), limited to this repo's main branch.
+
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ID: flowguard-ai-2026
+  REGION: asia-southeast1
+  SERVICE: flowguard
+  IMAGE: asia-southeast1-docker.pkg.dev/flowguard-ai-2026/flowguard/app
+  WIF_PROVIDER: projects/79354024474/locations/global/workloadIdentityPools/github/providers/flowguard-repo
+  DEPLOYER: github-deployer@flowguard-ai-2026.iam.gserviceaccount.com
+
+jobs:
+  test:
+    name: Tests and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, bcmath, pdo_sqlite
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Gemini is faked in these tests, so they are free and need no credentials.
+      - name: Backend tests
+        run: php artisan test tests/Unit tests/Feature/Api
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Frontend build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+  deploy:
+    name: Deploy to Cloud Run
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy-production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push image
+        run: |
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          docker build -t "${IMAGE}:${GITHUB_SHA}" .
+          docker push "${IMAGE}:${GITHUB_SHA}"
+
+      # Settings, secrets and the database link are kept from the current service; only the image changes.
+      - name: Deploy without traffic
+        run: |
+          gcloud run deploy "${SERVICE}" --project="${PROJECT_ID}" --region="${REGION}" \
+            --image="${IMAGE}:${GITHUB_SHA}" --no-traffic --tag=candidate --quiet
+
+      - name: Find the preview URL
+        id: preview
+        run: |
+          url=$(gcloud run services describe "${SERVICE}" --project="${PROJECT_ID}" --region="${REGION}" --format=json \
+            | jq -r '.status.traffic[] | select(.tag=="candidate") | .url')
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+          echo "Preview: ${url}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test the preview
+        run: sh docker/smoke-test.sh "${{ steps.preview.outputs.url }}"
+
+      - name: Send live traffic to the new revision
+        run: |
+          gcloud run services update-traffic "${SERVICE}" --project="${PROJECT_ID}" --region="${REGION}" --to-latest --quiet
+          echo "Live: https://flowguard-79354024474.asia-southeast1.run.app" >> "$GITHUB_STEP_SUMMARY"
