@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+// Light admin theme modelled on Frest: grey canvas, white cards, one blue accent, three risk colours.
 export default {
   content: [
     "./index.html",
@@ -7,50 +8,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        charcoal: {
-          950: '#0B0C0E',
-          900: '#121316',
-          850: '#16181F',
-          800: '#1C1F28',
-          750: '#232733',
-          700: '#2A303F',
-          600: '#3D4558',
-          500: '#5A647D',
-          400: '#8E98B0',
-          300: '#CBD2E1',
-          200: '#E4E8F1',
-          100: '#F3F5F9',
-        },
-        gold: {
-          600: '#B89225',
-          500: '#D4AF37', // Paradigm Gold
-          400: '#F5C542',
-          300: '#FDE08B',
-          200: '#FEF0C3',
-          100: '#FFF9E6',
-        },
-        risk: {
-          green: '#10B981',
-          greenBg: '#064E3B',
-          greenBorder: '#059669',
-          amber: '#F59E0B',
-          amberBg: '#78350F',
-          amberBorder: '#D97706',
-          red: '#EF4444',
-          redBg: '#7F1D1D',
-          redBorder: '#DC2626',
-        }
+        primary: { DEFAULT: '#5A8DEE', dark: '#4475D4', soft: '#E5EDFC' },
+        canvas: '#F2F2F6',
+        subtle: '#F4F6F8',
+        line: '#DFE3E7',
+        ink: '#304156',
+        body: '#475F7B',
+        muted: '#62778E',
+        high: { DEFAULT: '#FF5B5C', text: '#C62828', soft: '#FFE5E5' },
+        medium: { DEFAULT: '#FDAC41', text: '#935400', soft: '#FFF0DB' },
+        low: { DEFAULT: '#39DA8A', text: '#16794A', soft: '#DCF8EA' },
       },
       fontFamily: {
-        heading: ['Montserrat', 'sans-serif'],
-        sans: ['Inter', 'sans-serif'],
+        heading: ['Rubik', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
       },
       boxShadow: {
-        'gold-glow': '0 0 20px -5px rgba(212, 175, 55, 0.35)',
-        'red-glow': '0 0 20px -5px rgba(239, 68, 68, 0.35)',
-        'amber-glow': '0 0 20px -5px rgba(245, 158, 11, 0.35)',
-        'green-glow': '0 0 20px -5px rgba(16, 185, 129, 0.35)',
-      }
+        card: '0 2px 14px rgba(38, 60, 85, 0.08)',
+        pop: '0 10px 30px rgba(38, 60, 85, 0.22)',
+        primary: '0 2px 6px rgba(90, 141, 238, 0.4)',
+      },
+      zIndex: { drawer: '40', modal: '50', toast: '60' },
     },
   },
   plugins: [],

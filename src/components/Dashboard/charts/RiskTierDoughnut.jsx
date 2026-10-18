@@ -6,6 +6,7 @@ import {
   Legend
 } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { C, tooltip, legendLabels } from './theme';
 
 ChartJS.register(
   ArcElement,
@@ -21,11 +22,11 @@ export const RiskTierDoughnut = ({ counts = { LOW: 0, MEDIUM: 0, HIGH: 0 }, labe
       {
         data: [counts.LOW, counts.MEDIUM, counts.HIGH],
         backgroundColor: [
-          '#10B981', // green
-          '#F59E0B', // amber
-          '#EF4444'  // red
+          C.low, // green
+          C.medium, // amber
+          C.high  // red
         ],
-        borderColor: '#121316',
+        borderColor: '#FFFFFF',
         borderWidth: 3,
         hoverOffset: 6
       }
@@ -38,22 +39,10 @@ export const RiskTierDoughnut = ({ counts = { LOW: 0, MEDIUM: 0, HIGH: 0 }, labe
     plugins: {
       legend: {
         position: 'bottom',
-        labels: {
-          color: '#CBD2E1',
-          font: {
-            size: 11
-          },
-          usePointStyle: true,
-          boxWidth: 8
-        }
+        labels: legendLabels
       },
       tooltip: {
-        backgroundColor: '#1C1F28',
-        titleColor: '#FFFFFF',
-        bodyColor: '#D4AF37',
-        borderColor: '#2A303F',
-        borderWidth: 1,
-        padding: 10,
+        ...tooltip,
         callbacks: {
           label: (context) => ` ${context.label}: ${context.parsed} orders (${total ? Math.round(context.parsed / total * 100) : 0}%)`
         }
@@ -66,8 +55,8 @@ export const RiskTierDoughnut = ({ counts = { LOW: 0, MEDIUM: 0, HIGH: 0 }, labe
     <div className="h-64 w-full relative flex items-center justify-center">
       <Doughnut data={data} options={options} />
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6">
-        <span className="text-2xl font-heading font-extrabold text-white">{total.toLocaleString()}</span>
-        <span className="text-[10px] text-charcoal-400 font-medium">{label}</span>
+        <span className="text-2xl font-heading font-medium text-ink">{total.toLocaleString()}</span>
+        <span className="text-xs text-muted">{label}</span>
       </div>
     </div>
   );

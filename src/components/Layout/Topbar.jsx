@@ -1,144 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  Search, 
-  Sparkles, 
-  Zap, 
-  RotateCw, 
-  Clock, 
-  TrendingDown, 
-  ShieldAlert, 
-  CheckCircle2,
-  Bell
-} from 'lucide-react';
+import React from 'react';
+import { Menu, Search, Sparkles } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
-import { api } from '../../api';
 
-export const Topbar = ({ activeTab }) => {
-  const { 
-    isSimulating, 
-    simulationStep, 
-    setSimulationModalOpen, 
-    searchQuery, 
-    setSearchQuery 
-  } = useOrders();
-
-  // Headline numbers come from the backtest, the same source as the dashboard.
-  const [headline, setHeadline] = useState(null);
-  useEffect(() => {
-    api.dashboard().then((d) => setHeadline(d)).catch(() => setHeadline(null));
-  }, []);
-  const held = headline?.backtest?.if_high_orders_were_held;
-
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case 'queue':
-        return {
-          title: 'Action Queue',
-          desc: 'High-risk COD orders prioritized for supervisor verification before waybill generation'
-        };
-      case 'copilot':
-        return {
-          title: 'Ops Copilot',
-          desc: 'Operational intelligence powered by Gemini Pro function calling over warehouse & delivery data'
-        };
-      case 'dashboard':
-        return {
-          title: 'Analytics & Backtest Dashboard',
-          desc: 'Measurable RTS rate reduction, prevented return fees, and province level logistics insights'
-        };
-      default:
-        return { title: 'FlowGuard AI', desc: 'Fulfillment Supervisor' };
-    }
-  };
-
-  const { title, desc } = getTabTitle();
+export const Topbar = ({ activeTab, onMenu }) => {
+  const { isSimulating, simulationStep, searchQuery, setSearchQuery } = useOrders();
 
   return (
-    <header className="border-b border-charcoal-800 bg-charcoal-900/90 backdrop-blur-md sticky top-0 z-30">
-      <div className="px-6 py-3.5 flex items-center justify-between gap-4">
-        {/* Left: View title & description */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-lg font-heading font-bold text-white tracking-tight">{title}</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-charcoal-800 border border-charcoal-700 text-charcoal-300 font-medium">
-              Live Demo
-            </span>
-          </div>
-          <p className="text-xs text-charcoal-400 truncate max-w-xl">{desc}</p>
+    <div className="sticky top-0 z-30 px-4 sm:px-6 pt-4 bg-canvas">
+      <header className="bg-white rounded-md shadow-card min-h-[60px] px-4 flex items-center gap-3">
+        <button onClick={onMenu} aria-label="Open menu" className="lg:hidden p-2 -ml-2 text-body hover:text-ink">
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {activeTab === 'queue' ? (
+          <label className="flex-1 flex items-center gap-2 text-muted min-w-0">
+            <Search className="w-[18px] h-[18px] shrink-0" />
+            <span className="sr-only">Search orders</span>
+            <input
+              type="search"
+              placeholder="Search by order, buyer, item or address"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-2 bg-transparent text-ink placeholder:text-muted focus:outline-none"
+            />
+          </label>
+        ) : (
+          <p className="flex-1 text-sm text-muted truncate">Return-to-sender prevention for cash-on-delivery orders</p>
+        )}
+
+        <span className="hidden sm:inline text-xs px-2.5 py-1 rounded bg-medium-soft text-medium-text">Simulated data</span>
+        <div className="w-9 h-9 rounded-full bg-primary-soft text-primary font-semibold text-sm flex items-center justify-center" aria-label="Signed in as supervisor">
+          OPS
         </div>
+      </header>
 
-        {/* Right: Quick Search + Metrics + Simulate Order CTA */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Search box if in Action Queue */}
-          {activeTab === 'queue' && (
-            <div className="relative w-64">
-              <Search className="w-4 h-4 text-charcoal-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search orders, items, address..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-charcoal-800 border border-charcoal-700 rounded-xl pl-9 pr-3.5 py-1.5 text-xs text-white placeholder-charcoal-500 focus:outline-none focus:border-gold-500/60 focus:ring-1 focus:ring-gold-500/40 transition-colors"
-              />
-            </div>
-          )}
-
-          {/* Quick Metrics Badges */}
-          <div className="hidden lg:flex items-center gap-2">
-            {held && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs" title="Backtest on synthetic past orders">
-                <TrendingDown className="w-3.5 h-3.5 text-risk-green" />
-                <span className="text-charcoal-400">Backtest RTS:</span>
-                <span className="text-[10px] text-charcoal-500 line-through">{headline.backtest.overall_rts_rate}%</span>
-                <span className="font-bold text-risk-green">{held.rts_rate_of_orders_shipped}%</span>
-              </div>
-            )}
-
-            {held && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-charcoal-800/80 border border-charcoal-700 text-xs" title="Share of all returns that Gemini placed in the HIGH tier">
-                <ShieldAlert className="w-3.5 h-3.5 text-gold-400" />
-                <span className="text-charcoal-400">Returns caught:</span>
-                <span className="font-bold text-gold-300">{held.share_of_all_rts_caught_pct}%</span>
-              </div>
-            )}
-          </div>
-
-          {/* Simulate Order Button */}
-          <button
-            onClick={() => setSimulationModalOpen(true)}
-            disabled={isSimulating}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
-              isSimulating
-                ? 'bg-gold-500/20 text-gold-300 border border-gold-500/40 cursor-not-allowed'
-                : 'bg-gold-500 hover:bg-gold-400 text-charcoal-950 shadow-gold-glow hover:shadow-lg'
-            }`}
-          >
-            {isSimulating ? (
-              <>
-                <RotateCw className="w-3.5 h-3.5 animate-spin text-gold-400" />
-                <span>Scoring with Gemini...</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>Simulate Order</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Multi-step live scoring banner when simulation is running */}
       {isSimulating && (
-        <div className="bg-charcoal-850 border-t border-gold-500/30 px-6 py-2 flex items-center justify-between animate-shimmer text-xs">
-          <div className="flex items-center gap-2 text-gold-300">
-            <Sparkles className="w-4 h-4 text-gold-400 animate-spin" />
-            <span className="font-semibold text-white">Gemini Flash Pipeline:</span>
-            <span>{simulationStep}</span>
-          </div>
-          <span className="text-[11px] font-mono text-gold-400/80">USUALLY 7–10 S · VERTEX AI GEMINI FLASH</span>
+        <div role="status" className="mt-3 rounded-md animate-stripe px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
+          <Sparkles className="w-4 h-4 text-primary animate-spin" />
+          <span className="font-medium">Gemini Flash is scoring a new order.</span>
+          <span className="text-body">{simulationStep}</span>
+          <span className="ml-auto text-xs text-muted">Usually 7 to 10 seconds</span>
         </div>
       )}
-    </header>
+    </div>
   );
 };

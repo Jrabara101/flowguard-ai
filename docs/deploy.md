@@ -14,7 +14,20 @@ Data lives in Cloud SQL (MySQL 8). Gemini is called through Vertex AI with the s
 | Secrets | `flowguard-app-key` (APP_KEY), `flowguard-db-password` (DB_PASSWORD) |
 | Gemini | Flash `gemini-3.8-flash` for scoring, Pro `gemini-3.1-pro-preview` for the Copilot (fallback `gemini-2.5-pro`), location `global` |
 
-## Ship a new version
+## CI/CD (GitHub Actions, `.github/workflows/ci-cd.yml`)
+
+| When | What runs |
+|---|---|
+| Any pull request, any push | **Tests and build:** 60 backend tests (Gemini faked, free) and the React build |
+| Push or merge to `main` | The above, then **Deploy:** build the image (tagged with the commit), deploy it to Cloud Run with **no traffic** as the `candidate` tag, run `docker/smoke-test.sh` against that preview URL, and only if it passes move live traffic to it |
+
+- A failed smoke test leaves the live site on the previous revision. The preview URL is in the run summary.
+- Run it by hand: GitHub, Actions, CI/CD, Run workflow (choose `main`).
+- No keys: GitHub signs in through Workload Identity Federation (pool `github`, provider `flowguard-repo`), which only accepts this repository's `main` branch. It acts as `github-deployer`, which can only deploy Cloud Run, push to the `flowguard` image repository and run the service as `flowguard-run`.
+- Each deploy runs the smoke test, which makes a few Gemini calls (a cent or two).
+- During judging, avoid merging to `main` unless it is a fix: every merge goes live after the smoke test.
+
+## Ship a new version by hand
 
 ```sh
 # 1. Build in the cloud (about 5 minutes). Docker Desktop is not needed.
