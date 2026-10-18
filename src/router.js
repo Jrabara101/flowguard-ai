@@ -23,8 +23,15 @@ export function navigate(path, { replace = false } = {}) {
   window.scrollTo({ top: 0 });
 }
 
+// Friendly aliases people may type, mapped to the real dashboard routes
+const ALIASES = { '/dashboard': '/app', '/queue': '/app', '/copilot': '/app/copilot', '/analytics': '/app/analytics' };
+
 export function usePath() {
-  const [path, setPath] = useState(() => window.location.pathname);
+  const [path, setPath] = useState(() => {
+    const alias = ALIASES[window.location.pathname.replace(/\/+$/, '')];
+    if (alias) window.history.replaceState({}, '', alias);
+    return window.location.pathname;
+  });
   useEffect(() => {
     const sync = () => setPath(window.location.pathname);
     window.addEventListener('popstate', sync);
