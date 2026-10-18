@@ -53,6 +53,8 @@ export const ActionQueueView = () => {
     isSimulating,
     openOrder,
     bulkDecide,
+    searchQuery,
+    setSearchQuery,
   } = useOrders();
 
   const [headline, setHeadline] = useState(null);
@@ -190,17 +192,33 @@ export const ActionQueueView = () => {
               </tr>
             </thead>
             <tbody>
-              {loading && orders.length === 0 && (
-                <tr><td colSpan={9} className="px-5 py-12 text-center text-muted">Loading orders…</td></tr>
-              )}
+              {loading && orders.length === 0 && [0, 1, 2, 3, 4, 5].map((i) => (
+                <tr key={`sk-${i}`} className="border-t" aria-hidden="true">
+                  <td colSpan={9} className="px-5 py-4">
+                    <div className="flex items-center gap-6 animate-pulse">
+                      <div className="w-5 h-5 rounded bg-subtle" />
+                      <div className="w-20 h-4 rounded bg-subtle" />
+                      <div className="w-28 h-4 rounded bg-subtle" />
+                      <div className="hidden md:block w-24 h-4 rounded bg-subtle" />
+                      <div className="ml-auto w-40 h-2.5 rounded-full bg-subtle" />
+                      <div className="w-20 h-4 rounded bg-subtle" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
 
               {!loading && filteredOrders.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-5 py-12">
                     <div className="flex flex-col items-center text-center gap-2">
                       <SearchX className="w-9 h-9 text-muted" />
-                      <p className="font-medium text-ink">No orders match this filter</p>
-                      <p className="text-muted">Clear the search or pick another filter, or score a new order.</p>
+                      <p className="font-medium text-ink">{searchQuery ? `No orders match “${searchQuery}”` : 'No orders in this filter'}</p>
+                      <p className="text-muted">Search by order number, buyer initials, item, city or risk (for example “bacoor high”), pick another filter, or score a new order.</p>
+                      {(searchQuery || activeRiskFilter !== 'ALL') && (
+                        <button type="button" onClick={() => { setSearchQuery(''); setActiveRiskFilter('ALL'); }} className="mt-2 px-3 py-1.5 rounded bg-primary-soft text-primary font-medium hover:bg-primary hover:text-white transition-colors cursor-pointer">
+                          Show all orders
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

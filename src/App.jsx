@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { OrderProvider, useOrders } from './context/OrderContext';
 import { Sidebar } from './components/Layout/Sidebar';
 import { Topbar } from './components/Layout/Topbar';
@@ -8,6 +8,9 @@ import { DashboardView } from './components/Dashboard/DashboardView';
 import { OrderDrawer } from './components/ActionQueue/OrderDrawer';
 import { OverrideModal } from './components/ActionQueue/OverrideModal';
 import { SimulateOrderModal } from './components/ActionQueue/SimulateOrderModal';
+import { BootScreen } from './components/Layout/BootScreen';
+import { LandingPage } from './components/Landing/LandingPage';
+import { usePath, navigate, tabFromPath, TAB_PATHS } from './router';
 import { CheckCircle2, AlertTriangle, Info, Sparkles } from 'lucide-react';
 
 const TOAST_STYLE = {
@@ -47,8 +50,13 @@ const LoadBanner = () => {
   );
 };
 
-const MainLayout = () => {
-  const [activeTab, setActiveTab] = useState('queue');
+const TAB_TITLES = { queue: 'Action queue', copilot: 'Ops copilot', dashboard: 'Analytics' };
+
+const MainLayout = ({ path }) => {
+  // The tab lives in the URL (/app, /app/copilot, /app/analytics) so links and the back button work.
+  const activeTab = tabFromPath(path);
+  const setActiveTab = (id) => navigate(TAB_PATHS[id]);
+  useEffect(() => { document.title = `${TAB_TITLES[activeTab]} · FlowGuard`; }, [activeTab]);
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -60,9 +68,12 @@ const MainLayout = () => {
         <LoadBanner />
 
         <main className="px-4 sm:px-6 py-6">
-          {activeTab === 'queue' && <ActionQueueView />}
-          {activeTab === 'copilot' && <CopilotView />}
-          {activeTab === 'dashboard' && <DashboardView />}
+          {/* key = tab, so each tab change replays a short enter animation */}
+          <div key={activeTab} className="animate-view">
+            {activeTab === 'queue' && <ActionQueueView />}
+            {activeTab === 'copilot' && <CopilotView />}
+            {activeTab === 'dashboard' && <DashboardView />}
+          </div>
         </main>
       </div>
 
@@ -70,14 +81,21 @@ const MainLayout = () => {
       <OverrideModal />
       <SimulateOrderModal />
       <ToastNotification />
+      <BootScreen />
     </div>
   );
 };
 
 export default function App() {
+  const path = usePath();
+
+  if (!path.startsWith('/app')) {
+    return <LandingPage />;
+  }
+
   return (
     <OrderProvider>
-      <MainLayout />
+      <MainLayout path={path} />
     </OrderProvider>
   );
 }

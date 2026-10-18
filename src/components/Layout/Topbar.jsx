@@ -1,9 +1,10 @@
 import React from 'react';
-import { Menu, Search, Sparkles } from 'lucide-react';
+import { Menu, Sparkles } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
+import { SearchBox } from './SearchBox';
 
 export const Topbar = ({ activeTab, onMenu }) => {
-  const { isSimulating, simulationStep, searchQuery, setSearchQuery } = useOrders();
+  const { isSimulating, simulationStep } = useOrders();
 
   return (
     <div className="sticky top-0 z-30 px-4 sm:px-6 pt-4 bg-canvas">
@@ -12,21 +13,7 @@ export const Topbar = ({ activeTab, onMenu }) => {
           <Menu className="w-5 h-5" />
         </button>
 
-        {activeTab === 'queue' ? (
-          <label className="flex-1 flex items-center gap-2 text-muted min-w-0">
-            <Search className="w-[18px] h-[18px] shrink-0" />
-            <span className="sr-only">Search orders</span>
-            <input
-              type="search"
-              placeholder="Search by order, buyer, item or address"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2 bg-transparent text-ink placeholder:text-muted focus:outline-none"
-            />
-          </label>
-        ) : (
-          <p className="flex-1 text-sm text-muted truncate">Return-to-sender prevention for cash-on-delivery orders</p>
-        )}
+        <SearchBox activeTab={activeTab} />
 
         <span className="hidden sm:inline text-xs px-2.5 py-1 rounded bg-medium-soft text-medium-text">Simulated data</span>
         <div className="w-9 h-9 rounded-full bg-primary-soft text-primary font-semibold text-sm flex items-center justify-center" aria-label="Signed in as supervisor">

@@ -62,6 +62,52 @@
 .animate-drawer { animation: drawer-in 220ms ease-out; }
 .animate-pop { animation: pop-in 180ms ease-out; }
 
+/* Tab change inside the dashboard */
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-view { animation: view-in 220ms ease-out; }
+
+/* Landing hero copy */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* The HOLD stamp landing on the waybill */
+@keyframes stamp {
+  0% { opacity: 0; transform: scale(1.6) rotate(-4deg); }
+  60% { opacity: 1; transform: scale(0.94) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.animate-stamp { animation: stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+
+/* Loading page */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+.animate-breathe { animation: breathe 1.6s ease-in-out infinite; }
+
+@keyframes indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+.animate-indeterminate { animation: indeterminate 1.2s ease-in-out infinite; }
+
+/* Landing page <-> dashboard cross-fade (View Transitions API, where supported) */
+::view-transition-old(root) { animation: 180ms ease-in both fade-out; }
+::view-transition-new(root) { animation: 260ms ease-out both fade-in; }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+
+html { scroll-behavior: smooth; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-stripe, .animate-drawer, .animate-pop, .animate-spin, .animate-pulse { animation: none; }
+  html { scroll-behavior: auto; }
+  .animate-stripe, .animate-drawer, .animate-pop, .animate-spin, .animate-pulse,
+  .animate-view, .animate-rise, .animate-stamp, .animate-breathe, .animate-indeterminate { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
