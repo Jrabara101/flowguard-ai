@@ -9,7 +9,6 @@ import {
   Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { COPILOT_KNOWLEDGE } from '../../../data/mockData';
 
 ChartJS.register(
   CategoryScale,
@@ -20,23 +19,23 @@ ChartJS.register(
   Legend
 );
 
-export const ProvinceChart = () => {
-  const regions = COPILOT_KNOWLEDGE.get_region_trends;
+// Route = city and province of the delivery address: this is courier performance on a route, not a trait of the buyers there.
+export const ProvinceChart = ({ regions = [], average = 0 }) => {
 
   const data = {
-    labels: regions.map(r => r.province),
+    labels: regions.map(r => [r.city, r.province].filter(Boolean).join(', ')),
     datasets: [
       {
         label: 'RTS Rate (%)',
         data: regions.map(r => r.rts_rate),
         backgroundColor: regions.map(r => 
-          r.rts_rate >= 14 ? 'rgba(239, 68, 68, 0.8)' : 
-          r.rts_rate >= 10 ? 'rgba(245, 158, 11, 0.8)' : 
+          r.rts_rate >= average * 1.2 ? 'rgba(239, 68, 68, 0.8)' : 
+          r.rts_rate >= average ? 'rgba(245, 158, 11, 0.8)' : 
           'rgba(16, 185, 129, 0.8)'
         ),
         borderColor: regions.map(r => 
-          r.rts_rate >= 14 ? '#EF4444' : 
-          r.rts_rate >= 10 ? '#F59E0B' : 
+          r.rts_rate >= average * 1.2 ? '#EF4444' : 
+          r.rts_rate >= average ? '#F59E0B' : 
           '#10B981'
         ),
         borderWidth: 1.5,
@@ -74,7 +73,7 @@ export const ProvinceChart = () => {
           color: '#8E98B0',
           callback: (val) => `${val}%`
         },
-        max: 20
+        beginAtZero: true
       },
       y: {
         grid: {

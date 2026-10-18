@@ -9,7 +9,6 @@ import {
   Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { COPILOT_KNOWLEDGE } from '../../../data/mockData';
 
 ChartJS.register(
   CategoryScale,
@@ -20,8 +19,7 @@ ChartJS.register(
   Legend
 );
 
-export const ProductChart = () => {
-  const products = COPILOT_KNOWLEDGE.get_product_rts_rate;
+export const ProductChart = ({ products = [] }) => {
 
   const data = {
     labels: products.map(p => p.product_name.length > 18 ? p.product_name.substring(0, 16) + '...' : p.product_name),
@@ -77,7 +75,7 @@ export const ProductChart = () => {
           color: '#8E98B0',
           callback: (val) => `${val}%`
         },
-        max: 20
+        beginAtZero: true
       }
     }
   };

@@ -189,15 +189,15 @@ export const OrderDetailPanel = ({ order }) => {
               <div className="p-2.5 rounded-xl bg-charcoal-800 border border-charcoal-700/60">
                 <div className="text-charcoal-400 text-[10px]">Courier Route Rate</div>
                 <div className="text-sm font-bold text-white mt-0.5">
-                  {Math.round((signals.courier_success_rate_destination || 0.90) * 100)}% Success
+                  {signals.courier_success_rate_destination != null ? `${Math.round(signals.courier_success_rate_destination * 100)}% Success` : 'N/A'}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mt-3 text-[10px] text-charcoal-400 flex items-center justify-between">
-            <span>Phone seen on other accounts:</span>
-            <span className="font-semibold text-charcoal-300">{signals.phone_seen_on_other_accounts} accounts</span>
+            <span>Repeat buyer (same phone):</span>
+            <span className="font-semibold text-charcoal-300">{signals.is_repeat_phone ? 'Yes' : 'No, first order'}</span>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ export const OrderDetailPanel = ({ order }) => {
           </div>
 
           <div className="mt-4 pt-3 border-t border-charcoal-800 text-[10px] text-charcoal-400">
-            Model: <span className="text-charcoal-300 font-medium">Gemini 1.5 Flash (zero-shot structured reasoning)</span>
+            Model: <span className="text-charcoal-300 font-medium">Gemini Flash (structured JSON output)</span>
           </div>
         </div>
       </div>

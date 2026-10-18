@@ -59,6 +59,18 @@ it('offers Gemini all five tools and tells it today\'s date and the fairness rul
     });
 });
 
+it('echoes a tool call with no arguments back as an object, not a list', function () {
+    seedRtsData();
+    Http::fakeSequence()
+        ->push(toolCall('get_rts_summary', []))
+        ->push(geminiJson('Summary.'));
+
+    $this->postJson('/api/ai/copilot', ['message' => 'overall summary'])->assertOk();
+
+    // Gemini returns HTTP 400 ("Proto field is not repeating") if args is sent as [].
+    expect(Http::recorded()[1][0]->body())->toContain('"args":{}')->not->toContain('"args":[]');
+});
+
 it('runs several tools in one turn and keys the data by tool name', function () {
     seedRtsData();
     $two = ['modelVersion' => 'x', 'candidates' => [['content' => ['role' => 'model', 'parts' => [

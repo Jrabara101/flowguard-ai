@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { INITIAL_ORDERS, SIMULATION_PRESETS } from '../data/mockData';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import { api } from '../api';
 
 const OrderContext = createContext();
 
 export const OrderProvider = ({ children }) => {
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-  const [selectedOrderId, setSelectedOrderId] = useState(1043); // Start with high-risk order
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationStep, setSimulationStep] = useState('');
   const [simulationModalOpen, setSimulationModalOpen] = useState(false);
@@ -71,140 +73,84 @@ export const OrderProvider = ({ children }) => {
       });
   }, [orders, searchQuery, activeRiskFilter, sortBy]);
 
+  const loadQueue = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await api.queue();
+      setOrders(list);
+      setLoadError(null);
+      // Start on the riskiest order so the first screen shows the AI at work.
+      setSelectedOrderId((cur) => cur ?? [...list].sort((x, y) => y.risk_assessment.risk_score - x.risk_assessment.risk_score)[0]?.id ?? null);
+    } catch (e) {
+      setLoadError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
+  const replaceOrder = (updated) => setOrders(prev => prev.map(o => (o.id === updated.id ? updated : o)));
+
   // Accept AI Recommendation
-  const acceptOrder = (orderId, note = '') => {
-    setOrders(prev => prev.map(o => {
-      if (o.id !== orderId) return o;
-      const recommendedAction = o.risk_assessment.recommended_action;
-      const newDecision = {
-        status: 'ACCEPTED',
-        action: recommendedAction,
-        actor: 'Supervisor (Ops Team)',
-        note: note || `Accepted AI recommendation: ${recommendedAction}`,
-        timestamp: new Date().toISOString()
-      };
-      return {
-        ...o,
-        decision: newDecision,
-        decision_history: [
-          ...o.decision_history,
-          {
-            action: recommendedAction,
-            actor: 'Supervisor (Ops Team)',
-            overrode_ai: false,
-            note: note || `Accepted AI recommendation: ${recommendedAction}`,
-            timestamp: new Date().toISOString()
-          }
-        ]
-      };
-    }));
-    showToast(`Order #${orderId} accepted as ${selectedOrder?.risk_assessment.recommended_action}`, 'success');
+  const acceptOrder = async (orderId) => {
+    try {
+      const updated = await api.decide(orderId);
+      replaceOrder(updated);
+      showToast(`Order #${orderId} accepted as ${updated.decision.action}`, 'success');
+    } catch (e) {
+      showToast(e.message, 'warning');
+    }
   };
 
   // Override AI Recommendation
-  const overrideOrder = (orderId, newAction, note = '') => {
-    setOrders(prev => prev.map(o => {
-      if (o.id !== orderId) return o;
-      const newDecision = {
-        status: 'OVERRIDDEN',
-        action: newAction,
-        actor: 'Supervisor (Ops Team)',
-        note: note || `Supervisor override to ${newAction}`,
-        timestamp: new Date().toISOString()
-      };
-      return {
-        ...o,
-        decision: newDecision,
-        decision_history: [
-          ...o.decision_history,
-          {
-            action: newAction,
-            actor: 'Supervisor (Ops Team)',
-            overrode_ai: true,
-            note: note || `Supervisor override to ${newAction}`,
-            timestamp: new Date().toISOString()
-          }
-        ]
-      };
-    }));
-    setOverrideModalOpen(false);
-    showToast(`Order #${orderId} overridden to ${newAction}`, 'warning');
+  const overrideOrder = async (orderId, newAction, note = '') => {
+    try {
+      const updated = await api.decide(orderId, newAction, note);
+      replaceOrder(updated);
+      setOverrideModalOpen(false);
+      showToast(`Order #${orderId} overridden to ${newAction}`, 'warning');
+    } catch (e) {
+      showToast(e.message, 'warning');
+    }
   };
 
-  // Simulate incoming order with multi-stage scoring
-  const simulateIncomingOrder = (presetIndex = 0) => {
-    const preset = SIMULATION_PRESETS[presetIndex % SIMULATION_PRESETS.length];
+  // Gemini Flash scores the next incoming order. The stage messages are only progress text while we wait (7-10 s).
+  const simulateIncomingOrder = async () => {
     setIsSimulating(true);
     setSimulationModalOpen(false);
+    const stages = [
+      'Receiving the new order and extracting customer history signals...',
+      'Reading the Messenger chat in Taglish and judging buyer intent...',
+      'Parsing the Philippine address and checking route performance...',
+      'Gemini Flash is scoring the RTS risk...',
+    ];
+    let i = 0;
+    setSimulationStep(stages[0]);
+    const timer = setInterval(() => { i = Math.min(i + 1, stages.length - 1); setSimulationStep(stages[i]); }, 2200);
 
-    // Multi-stage scoring animation steps
-    setSimulationStep('Connecting to webhook & extracting customer historical signals...');
-
-    setTimeout(() => {
-      setSimulationStep('Analyzing Messenger conversation in Taglish & judging buyer intent...');
-    }, 600);
-
-    setTimeout(() => {
-      setSimulationStep('Parsing Philippine address & verifying courier coverage...');
-    }, 1200);
-
-    setTimeout(() => {
-      setSimulationStep('Calculating RTS probability with Gemini 1.5 Flash...');
-    }, 1800);
-
-    setTimeout(() => {
-      const newId = Math.floor(1047 + Math.random() * 50);
-      const newOrder = {
-        id: newId,
-        channel: preset.channel,
-        amount: preset.amount,
-        payment_type: "COD",
-        created_at: new Date().toISOString(),
-        items: preset.items,
-        raw_address: preset.raw_address,
-        customer: {
-          name: "Simulated Buyer",
-          phone_masked: "09•• ••• " + Math.floor(1000 + Math.random() * 9000),
-          phone_hash: "sha256:" + Math.random().toString(36).substring(2, 8),
-          total_orders: 1,
-          delivered_count: 0,
-          rts_count: 1
-        },
-        signals: {
-          customer_total_orders: 1,
-          customer_delivered: 0,
-          customer_rts: 1,
-          past_rts_count: 1,
-          order_value_vs_customer_avg: 1.5,
-          is_repeat_phone: true,
-          phone_seen_on_other_accounts: 1,
-          courier_success_rate_destination: 0.89,
-          is_cod: true
-        },
-        conversation: preset.conversation,
-        risk_assessment: preset.predicted,
-        decision: {
-          status: "PENDING",
-          action: null,
-          actor: null,
-          note: null,
-          timestamp: null
-        },
-        decision_history: []
-      };
-
-      setOrders(prev => [newOrder, ...prev]);
-      setSelectedOrderId(newId);
+    try {
+      const order = await api.simulate();
+      setOrders(prev => [order, ...prev.filter(o => o.id !== order.id)]);
+      setSelectedOrderId(order.id);
+      const a = order.risk_assessment;
+      showToast(`Order #${order.id} scored by Gemini Flash: ${a.risk_tier} RISK (${a.risk_score}/100)`, 'gold');
+    } catch (e) {
+      showToast(e.message, 'warning');
+    } finally {
+      clearInterval(timer);
       setIsSimulating(false);
       setSimulationStep('');
-      showToast(`⚡ Order #${newId} scored by Gemini Flash: ${preset.predicted.risk_tier} RISK (${preset.predicted.risk_score}/100)`, 'gold');
-    }, 2400);
+    }
   };
 
   return (
     <OrderContext.Provider
       value={{
         orders,
+        loading,
+        loadError,
+        reloadQueue: loadQueue,
         filteredOrders,
         selectedOrder,
         selectedOrderId,

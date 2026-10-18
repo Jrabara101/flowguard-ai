@@ -11,7 +11,6 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { DASHBOARD_STATS } from '../../../data/mockData';
 
 ChartJS.register(
   CategoryScale,
@@ -24,37 +23,38 @@ ChartJS.register(
   Filler
 );
 
-export const RtsTrendChart = () => {
-  const trend = DASHBOARD_STATS.weekly_rts_trend;
+// Actual weekly RTS rate of past orders, with the backtest result drawn as a flat reference line:
+// the RTS rate of the orders FlowGuard would have shipped straight away (LOW and MEDIUM).
+export const RtsTrendChart = ({ weekly = [], shippedRate = null }) => {
+  const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
 
-  const data = {
-    labels: trend.labels,
-    datasets: [
-      {
-        label: 'Baseline RTS Rate (Without FlowGuard)',
-        data: trend.baseline,
-        borderColor: '#8E98B0',
-        backgroundColor: 'transparent',
-        borderDash: [5, 5],
-        borderWidth: 2,
-        pointRadius: 3,
-        pointBackgroundColor: '#8E98B0',
-        tension: 0.3
-      },
-      {
-        label: 'With FlowGuard AI Protection',
-        data: trend.with_flowguard,
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.15)',
-        borderWidth: 3,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointBackgroundColor: '#10B981',
-        fill: true,
-        tension: 0.3
-      }
-    ]
-  };
+  const datasets = [
+    {
+      label: 'Actual RTS rate (all orders shipped)',
+      data: weekly.map(w => w.rts_rate),
+      borderColor: '#EF4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.12)',
+      borderWidth: 3,
+      pointRadius: 4,
+      pointBackgroundColor: '#EF4444',
+      fill: true,
+      tension: 0.3
+    }
+  ];
+  if (shippedRate !== null) {
+    datasets.push({
+      label: 'Backtest: orders FlowGuard would ship',
+      data: weekly.map(() => shippedRate),
+      borderColor: '#10B981',
+      backgroundColor: 'transparent',
+      borderDash: [6, 4],
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0
+    });
+  }
+
+  const data = { labels: weekly.map(w => `Wk of ${fmt(w.week_start)}`), datasets };
 
   const options = {
     responsive: true,
@@ -103,8 +103,7 @@ export const RtsTrendChart = () => {
           color: '#8E98B0',
           callback: (val) => `${val}%`
         },
-        min: 6,
-        max: 20
+        beginAtZero: true
       }
     }
   };
