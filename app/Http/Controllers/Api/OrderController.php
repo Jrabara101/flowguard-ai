@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\Ai\OrderScorer;
+use App\Services\Firebase\ActivityFeed;
 use App\Services\OrderPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class OrderController extends Controller
     }
 
     /** Demo button: Gemini scores the next incoming order that has not been scored yet. */
-    public function simulate(OrderScorer $scorer): JsonResponse
+    public function simulate(OrderScorer $scorer, ActivityFeed $feed): JsonResponse
     {
         $order = Order::query()->where('status', 'PENDING')->whereDoesntHave('riskAssessments')->orderBy('placed_at')->first();
         if (! $order) {
@@ -59,7 +60,7 @@ class OrderController extends Controller
         }
 
         try {
-            $scorer->scoreAndSave($order);
+            $feed->scored($order, $scorer->scoreAndSave($order));
         } catch (Throwable $e) {
             report($e);
 
@@ -75,10 +76,10 @@ class OrderController extends Controller
     }
 
     /** Score this stored order with Gemini and save the assessment. */
-    public function score(Order $order, OrderScorer $scorer): JsonResponse
+    public function score(Order $order, OrderScorer $scorer, ActivityFeed $feed): JsonResponse
     {
         try {
-            $scorer->scoreAndSave($order);
+            $feed->scored($order, $scorer->scoreAndSave($order));
         } catch (Throwable $e) {
             report($e);
 
@@ -92,7 +93,7 @@ class OrderController extends Controller
      * Staff accept the AI's recommendation (send no action) or override it (send an action).
      * Every decision is logged; an override is flagged so we can see where staff disagree with the AI.
      */
-    public function decide(Request $request, Order $order): JsonResponse
+    public function decide(Request $request, Order $order, ActivityFeed $feed): JsonResponse
     {
         $data = $request->validate([
             'action' => ['sometimes', Rule::in(['SHIP_NOW', 'CONFIRM_FIRST', 'HOLD'])],
@@ -105,7 +106,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'This order has no AI recommendation yet. Send an action.'], 422);
         }
 
-        $order->decisions()->create([
+        $decision = $order->decisions()->create([
             'risk_assessment_id' => $assessment?->id,
             'action' => $action,
             'actor' => 'STAFF',
@@ -115,6 +116,7 @@ class OrderController extends Controller
         ]);
 
         $order->update(['status' => ['SHIP_NOW' => 'SHIPPED', 'CONFIRM_FIRST' => 'CONFIRMING', 'HOLD' => 'HOLD'][$action]]);
+        $feed->decided($order, $decision);
 
         return response()->json(OrderPresenter::detail($order->refresh()));
     }

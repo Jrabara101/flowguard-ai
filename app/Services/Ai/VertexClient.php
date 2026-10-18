@@ -106,6 +106,12 @@ class VertexClient
             : true;
     }
 
+    /** The same Google token, for other Google APIs (Firestore). The cloud-platform scope covers them. */
+    public function accessToken(): string
+    {
+        return $this->token();
+    }
+
     private function token(): string
     {
         if ($t = config('services.vertex.access_token')) {

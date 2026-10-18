@@ -13,6 +13,8 @@ Data lives in Cloud SQL (MySQL 8). Gemini is called through Vertex AI with the s
 | Database | Cloud SQL `flowguard-db` (MySQL 8.0, db-f1-micro), database and user `flowguard` |
 | Secrets | `flowguard-app-key` (APP_KEY), `flowguard-db-password` (DB_PASSWORD) |
 | Gemini | Flash `gemini-3.8-flash` for scoring, Pro `gemini-3.1-pro-preview` for the Copilot (fallback `gemini-2.5-pro`), location `global` |
+| Firebase Hosting | https://flowguard-ai-2026.web.app, every request rewritten to the Cloud Run service (`firebase.json`) |
+| Firestore | `(default)` database in asia-southeast1, collection `activity` = the live feed (`firestore.rules`: public read, no browser writes) |
 
 ## CI/CD (GitHub Actions, `.github/workflows/ci-cd.yml`)
 
@@ -26,6 +28,14 @@ Data lives in Cloud SQL (MySQL 8). Gemini is called through Vertex AI with the s
 - No keys: GitHub signs in through Workload Identity Federation (pool `github`, provider `flowguard-repo`), which only accepts this repository's `main` branch. It acts as `github-deployer`, which can only deploy Cloud Run, push to the `flowguard` image repository and run the service as `flowguard-run`.
 - Each deploy runs the smoke test, which makes a few Gemini calls (a cent or two).
 - During judging, avoid merging to `main` unless it is a fix: every merge goes live after the smoke test.
+
+## Firebase (Hosting + Firestore)
+
+- The app's public link is **https://flowguard-ai-2026.web.app**. Firebase Hosting forwards every path to Cloud Run, so it always shows whatever Cloud Run serves (requests over 60 s are cut off by Hosting; ours take 10–20 s at most).
+- Each Gemini score and staff decision is written to Firestore `activity` after the response (`app/Services/Firebase/ActivityFeed.php`), only when `FIRESTORE_ACTIVITY_FEED=true` is set on the service. No names or phone numbers.
+- The Analytics page streams that collection live with the Firebase JS SDK (`src/components/LiveActivity.jsx`).
+- Change `firebase.json` or `firestore.rules`, then: `firebase deploy --only "firestore:rules,hosting" --project flowguard-ai-2026` (uses your gcloud login). App code changes need no Firebase deploy.
+- Cost: inside the free allowances (Hosting 10 GB/month; Firestore 50k reads and 20k writes a day).
 
 ## Ship a new version by hand
 
