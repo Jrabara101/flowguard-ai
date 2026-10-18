@@ -1,6 +1,7 @@
 import React from 'react';
 import { Inbox, Bot, BarChart3, ShieldCheck, X } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
+import { navigate } from '../../router';
 
 export const NAV_ITEMS = [
   { id: 'queue', label: 'Action queue', icon: Inbox },
@@ -24,8 +25,10 @@ export const Sidebar = ({ activeTab, setActiveTab, open, onClose }) => {
         className={`fixed lg:static inset-y-0 left-0 z-drawer w-[260px] shrink-0 bg-white shadow-card flex flex-col transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="h-[72px] px-6 flex items-center gap-3">
-          <img src="/logo.png" alt="" className="w-8 h-8 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
-          <span className="font-heading font-semibold text-xl text-ink">FlowGuard</span>
+          <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className="flex items-center gap-3 rounded" aria-label="FlowGuard home page">
+            <img src="/logo.png" alt="" className="w-8 h-8 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+            <span className="font-heading font-semibold text-xl text-ink">FlowGuard</span>
+          </a>
           <button onClick={onClose} aria-label="Close menu" className="ml-auto lg:hidden p-2 text-body hover:text-ink">
             <X className="w-5 h-5" />
           </button>

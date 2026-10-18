@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { api } from '../api';
+import { matchesQuery } from '../search';
 
 const OrderContext = createContext();
 
@@ -35,18 +36,8 @@ export const OrderProvider = ({ children }) => {
   const filteredOrders = useMemo(() => {
     return orders
       .filter(order => {
-        // Search query
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchId = order.id.toString().includes(q);
-          const matchCustomer = order.customer.name.toLowerCase().includes(q);
-          const matchChannel = order.channel.toLowerCase().includes(q);
-          const matchItems = order.items.some(i => i.name.toLowerCase().includes(q));
-          const matchAddress = order.raw_address.toLowerCase().includes(q);
-          if (!matchId && !matchCustomer && !matchChannel && !matchItems && !matchAddress) {
-            return false;
-          }
-        }
+        // Search query: every word must match the order number, buyer, item, channel, place, tier or action
+        if (!matchesQuery(order, searchQuery)) return false;
 
         // Filter by risk tier / status
         if (activeRiskFilter === 'ALL') return true;
